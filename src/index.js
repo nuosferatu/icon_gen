@@ -42,6 +42,7 @@ async function deepseek(env, messages, structured = true) {
   if (!structured) return content;
   try { return JSON.parse(content); } catch { throw new Error('DeepSeek returned invalid structured content. Please try again.'); }
 }
+const requirementRules = '必须根据完整对话逐项判断生图需求是否仍然有效。用户说“撤回上一个要求”时，结合上下文定位最近一项被撤回的生图要求，从最终结果中完全移除对应要求；用户明确撤回、删除或取消某个之前提出的需求时，也必须移除该需求，包括它来自基础预设的情况。已撤回或删除的要求不得以历史、待定、说明或其他字段重新出现。仅当用户明确禁止某内容时，才把它记录为排除项；撤回一个要求不等于禁止该内容。未被撤回的要求继续保留。若撤回对象不明确，不要猜测具体对象。';
 function validateSpec(spec) {
   if (!spec || typeof spec !== 'object' || Array.isArray(spec) || typeof spec.prompt !== 'string' || !spec.prompt.trim() || spec.prompt.length > 2048 || JSON.stringify(spec).length > 30000) throw new Error('Invalid preset');
   return spec;
@@ -103,7 +104,7 @@ export default {
         const input = await body(request), history = validateHistory(input.history);
         const preset = input.preset == null ? null : validateSpec(input.preset);
         const summary = await deepseek(env, [
-          {role:'system', content:'你的任务是压缩关于生图需求的对话上下文，而不是总结普通聊天或评价生成结果。综合基础预设与全部对话，提取当前有效的图像生成要求；用户后续明确修改覆盖旧要求，未被修改的要求保留。输出 JSON 对象，按需包含主体、风格、构图、色彩、背景、细节、约束、排除项和未明确的信息。尽量具体、简洁，不要虚构用户未提出的要求，不要把助手的“已生成”等状态当作画面描述。所有字段名称和描述使用中文，专有名词可保留原文。只输出 JSON。'},
+          {role:'system', content:'你的任务是压缩关于生图需求的对话上下文，而不是总结普通聊天或评价生成结果。综合基础预设与全部对话，提取当前有效的图像生成要求；用户后续明确修改覆盖旧要求，未被修改的要求保留。输出 JSON 对象，按需包含主体、风格、构图、色彩、背景、细节、约束、排除项和未明确的信息。尽量具体、简洁，不要虚构用户未提出的要求，不要把助手的“已生成”等状态当作画面描述。所有字段名称和描述使用中文，专有名词可保留原文。只输出 JSON。' + requirementRules},
           ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
           ...history
         ]);
@@ -116,7 +117,7 @@ export default {
         if (!name || typeof input.lastPrompt !== 'string' || !input.lastPrompt.trim() || input.lastPrompt.length > 2048) return fail('Provide a preset name and generate an image first');
         const previous = input.preset == null ? null : validateSpec(input.preset);
         const spec = validateSpec(await deepseek(env, [
-          {role:'system', content:'你是图像生成规范整理专家。根据基础预设、全部对话及最终生成提示词，整合成具体、详细、完整、约束明确的可复用 JSON 规范。保留用户最新修改，区分明确要求与未指定内容，不要虚构用户要求。字段值使用中文，专有名词可保留原文。输出 JSON 对象，包含 title、subject、composition、style、palette、lighting、background、constraints（数组）、avoid（数组）、prompt（中文完整提示词，不超过 1800 字符）。只输出 JSON。'},
+          {role:'system', content:'你是图像生成规范整理专家。根据基础预设、全部对话及最终生成提示词，整合成具体、详细、完整、约束明确的可复用 JSON 规范。保留用户最新修改，区分明确要求与未指定内容，不要虚构用户要求。字段值使用中文，专有名词可保留原文。输出 JSON 对象，包含 title、subject、composition、style、palette、lighting、background、constraints（数组）、avoid（数组）、prompt（中文完整提示词，不超过 1800 字符）。只输出 JSON。' + requirementRules},
           ...(previous ? [{role:'system',content:`基础预设：${JSON.stringify(previous)}`}] : []), ...history,
           {role:'user',content:`最终用于生成满意图片的提示词：${input.lastPrompt}。请生成可复用的结构化 JSON 预设。`}
         ]));

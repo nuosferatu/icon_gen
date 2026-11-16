@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f8f7f4">
+  <meta name="theme-color" content="#f8f8f8">
   <title>Icon Generator</title>
   <script>try { if (localStorage.getItem('icon-gen-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; if (localStorage.getItem('icon-gen-sidebar') === 'closed') document.documentElement.dataset.sidebar = 'closed'; } catch (_) {}</script>
   <link rel="stylesheet" href="/style.css">
@@ -11,34 +11,34 @@
 <body>
 <header>
   <div class="header-left">
-    <button id="sidebar-toggle" class="sidebar-toggle hidden" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
-    </button>
     <a class="brand" href="/"><span>Icon Generator</span></a>
   </div>
   <div class="header-right">
-    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme" aria-pressed="false">
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to Dark Theme" title="Switch to Dark Theme" aria-pressed="false">
       <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.9 13.2A8.5 8.5 0 0 1 10.8 3.1 8.5 8.5 0 1 0 20.9 13.2Z"/></svg>
       <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     </button>
-    <button id="logout" class="link hidden">Log out</button>
+    <button id="logout" class="logout-button hidden" type="button" aria-label="Log Out" title="Log Out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2"/><path d="M8 12h13m-4-4 4 4-4 4"/></svg></button>
   </div>
 </header>
 <main>
   <section id="login" class="login hidden">
     <div class="login-card">
-      <h1>Log in</h1>
+      <h1>Log In</h1>
       <form id="login-form">
         <label for="password">Password</label>
         <input id="password" type="password" placeholder="Enter password" required autocomplete="current-password">
-        <button class="primary" type="submit">Log in</button>
+        <button class="primary" type="submit">Log In</button>
       </form>
     </div>
   </section>
   <section id="studio" class="studio hidden">
+    <button id="sidebar-toggle" class="sidebar-toggle hidden" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse Sidebar" title="Collapse Sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+    </button>
     <aside id="sidebar" class="sidebar">
       <div class="side-heading"><h2>Presets <span id="preset-count">0</span></h2></div>
-      <button id="new" class="outline">＋ New chat</button>
+      <button id="new" class="outline">＋ New Chat</button>
       <div class="divider"></div>
       <div id="presets" class="preset-list"></div>
     </aside>
@@ -51,7 +51,7 @@
           <div id="messages" class="messages"></div>
           <form id="chat-form" class="composer">
             <textarea id="message" placeholder="Describe an image or request changes" rows="3" maxlength="6000" required></textarea>
-            <div class="composer-foot"><button type="submit" class="send" aria-label="Send">↑</button></div>
+            <button type="submit" class="send" aria-label="Send" title="Send">↑</button>
           </form>
         </section>
         <section class="summary panel">
@@ -60,13 +60,17 @@
           <pre id="summary-content" class="summary-content hidden"></pre>
         </section>
         <section class="preview panel">
-          <div class="panel-head"><h3>Image Preview</h3></div>
+          <div class="panel-head">
+            <h3>Image Preview</h3>
+            <div class="preview-actions">
+              <a id="download" class="download hidden" download="image.svg" aria-label="Download Image" title="Download Image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></a>
+              <button id="save" class="save" type="button" aria-label="Save Preset" title="Save Preset" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h12l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M7 3v6h9V3M7 21v-8h10v8"/></svg></button>
+            </div>
+          </div>
           <div id="image-wrap" class="image-wrap">
             <div class="empty-image">No image yet</div>
             <img id="image" class="hidden" alt="Generated image">
           </div>
-          <div class="preview-foot"><a id="download" class="download hidden" download="image.svg">Download image</a></div>
-          <button id="save" class="primary save" disabled>Save preset</button>
         </section>
       </div>
     </div>

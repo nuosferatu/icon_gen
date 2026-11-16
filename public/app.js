@@ -2,12 +2,12 @@ const $ = (selector) => document.querySelector(selector);
 let history = [], presets = [], active = null, lastPrompt = '', lastSvg = '', imageUrl = '', busy = false;
 function updateThemeButton() {
   const dark = document.documentElement.dataset.theme === 'dark';
-  const label = dark ? 'Switch to light theme' : 'Switch to dark theme';
+  const label = dark ? 'Switch to Light Theme' : 'Switch to Dark Theme';
   const button = $('#theme-toggle');
   button.setAttribute('aria-label', label);
   button.setAttribute('title', label);
   button.setAttribute('aria-pressed', String(dark));
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#151b17' : '#f8f7f4');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#191919' : '#f8f8f8');
 }
 $('#theme-toggle').onclick = () => {
   const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -19,7 +19,7 @@ updateThemeButton();
 function updateSidebarButton() {
   const expanded = document.documentElement.dataset.sidebar !== 'closed';
   const button = $('#sidebar-toggle');
-  const label = expanded ? 'Collapse sidebar' : 'Expand sidebar';
+  const label = expanded ? 'Collapse Sidebar' : 'Expand Sidebar';
   button.setAttribute('aria-expanded', String(expanded));
   button.setAttribute('aria-label', label);
   button.setAttribute('title', label);
@@ -49,13 +49,13 @@ function renderPresets() {
     const item = document.createElement('div'); item.className = 'preset-item' + (active?.id === preset.id ? ' selected' : '');
     const load = document.createElement('button'); load.className = 'preset-load'; load.textContent = preset.name; load.title = preset.name; load.disabled = busy;
     load.onclick = () => { if (history.length && !confirm('Loading a preset will clear the current chat. Continue?')) return; reset(preset); };
-    const del = document.createElement('button'); del.className = 'preset-delete'; del.textContent = '×'; del.title = 'Delete preset'; del.disabled = busy;
-    del.onclick = async () => { if (!confirm(`Delete preset ${preset.name}?`)) return; try { await api('/api/presets/' + encodeURIComponent(preset.id), {method:'DELETE'}); if (active?.id === preset.id) { active = null; updateActive(); } await refreshPresets(); toast('Preset deleted'); } catch (e) { toast(e.message); } };
+    const del = document.createElement('button'); del.className = 'preset-delete'; del.textContent = '×'; del.title = 'Delete Preset'; del.disabled = busy;
+    del.onclick = async () => { if (!confirm(`Delete Preset ${preset.name}?`)) return; try { await api('/api/presets/' + encodeURIComponent(preset.id), {method:'DELETE'}); if (active?.id === preset.id) { active = null; updateActive(); } await refreshPresets(); toast('Preset deleted'); } catch (e) { toast(e.message); } };
     item.append(load, del); list.append(item);
   }
 }
 async function refreshPresets() { presets = (await api('/api/presets')).presets; renderPresets(); }
-function updateActive() { const el = $('#active-preset'); el.classList.toggle('hidden', !active); el.replaceChildren(); if (active) { const label = document.createElement('span'); label.textContent = `Current preset: ${active.name}`; const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'View structured details'; const pre = document.createElement('pre'); pre.textContent = JSON.stringify(active.spec, null, 2); details.append(summary, pre); el.append(label, details); } renderPresets(); }
+function updateActive() { const el = $('#active-preset'); el.classList.toggle('hidden', !active); el.replaceChildren(); if (active) { const label = document.createElement('span'); label.textContent = `Current preset: ${active.name}`; const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'View Structured Details'; const pre = document.createElement('pre'); pre.textContent = JSON.stringify(active.spec, null, 2); details.append(summary, pre); el.append(label, details); } renderPresets(); }
 // Prevent active content and external resources in a downloadable SVG.
 function safeSvg(source) {
   if (typeof source !== 'string' || source.length > 50000) throw new Error('Invalid SVG size or content. Please try again.');
@@ -82,6 +82,11 @@ function addMessage(role, content) { const el = document.createElement('div'); e
 $('#login-form').onsubmit = async e => { e.preventDefault(); const button = e.target.querySelector('button'); button.disabled = true; try { await api('/api/login', { method:'POST', body: {password:$('#password').value} }); $('#password').value = ''; await showStudio(); } catch (err) { toast(err.message); } finally { button.disabled = false; } };
 $('#logout').onclick = async () => { try { await api('/api/logout',{method:'POST',body:{}}); reset(); showLogin(); } catch(e) { toast(e.message); } };
 $('#new').onclick = () => { if (history.length && !confirm('Starting a new chat will clear the current chat. Continue?')) return; reset(); };
+$('#message').addEventListener('keydown', event => {
+  if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
+  event.preventDefault();
+  if (!busy && !event.repeat) $('#chat-form').requestSubmit();
+});
 $('#chat-form').onsubmit = async e => {
   e.preventDefault();
   if (busy) return;

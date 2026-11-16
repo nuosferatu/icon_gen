@@ -63,6 +63,8 @@ test('summarizes the full image request and loaded preset using structured outpu
     const payload = JSON.parse(options.body);
     assert.equal(payload.response_format.type,'json_object');
     assert.match(payload.messages[0].content,/生图需求/);
+    assert.match(payload.messages[0].content,/撤回上一个要求/);
+    assert.match(payload.messages[0].content,/撤回一个要求不等于禁止/);
     assert.ok(payload.messages.some(m => m.content.includes('minimal icon')));
     assert.deepEqual(payload.messages.slice(-history.length), history);
     return Response.json({choices:[{message:{content:JSON.stringify({主体:'小猫',色彩:'蓝色',风格:'极简'})}}]});
