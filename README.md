@@ -16,15 +16,15 @@
    npx wrangler whoami
    ```
 
-2. 创建持久化数据库：
+2. 如需在其他账户创建数据库，运行：
 
    ```sh
    npx wrangler d1 create image-preset-studio
    ```
 
-   将命令输出中的 `database_id` 填入 `wrangler.jsonc`，替换 `REPLACE_WITH_D1_DATABASE_ID`。如果 Worker 名称与已有项目冲突，也请修改该文件中的 `name`。
+   项目当前配置绑定了现有的 D1 数据库。若要在其他账户部署，创建数据库后将输出中的 `database_id` 填入 `wrangler.jsonc`，并根据需要修改 `database_name` 和 Worker 的 `name`。
 
-3. 初始化远程数据库：
+3. 首次使用该数据库时，初始化远程数据库：
 
    ```sh
    npx wrangler d1 migrations apply image-preset-studio --remote
@@ -50,7 +50,7 @@
 
 ## 本地开发
 
-将 `wrangler.jsonc` 中的 D1 ID 配置好后：
+本项目的 D1 绑定设置了 `remote: true`，`npm run dev` 默认连接远程数据库，修改会影响远程数据。如需使用独立的本地数据库，先在 `wrangler.jsonc` 中移除或关闭 `remote`，然后运行：
 
 ```sh
 npx wrangler d1 migrations apply image-preset-studio --local
@@ -63,7 +63,7 @@ APP_PASSWORD=替换为至少16字符的随机密码
 DEEPSEEK_API_KEY=替换为你的DeepSeek密钥
 ```
 
-运行 `npm run dev`。本地 D1 与远程 D1 相互独立。DeepSeek 使用真实远程调用。`npm test` 运行不依赖外部服务的接口测试。
+运行 `npm run dev`。本地 D1 与远程 D1 相互独立。若保留 `remote: true`，开发服务会使用远程 D1。DeepSeek 使用真实远程调用。`npm test` 运行不依赖外部服务的接口测试。
 
 可选：配置 Worker 环境变量 `DEEPSEEK_MODEL` 来更换 DeepSeek 模型；默认为 `deepseek-flash`。模型需要支持 Chat Completions JSON 模式。
 

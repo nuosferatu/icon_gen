@@ -1,8 +1,22 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "image-preset-studio",
-  "main": "src/index.js",
-  "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
-  "d1_databases": [{ "binding": "DB", "database_name": "image-preset-studio", "database_id": "REPLACE_WITH_D1_DATABASE_ID", "migrations_dir": "migrations" }]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "icon_gen",
+	"main": "src/index.js",
+	"compatibility_date": "2026-10-01",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"run_worker_first": [
+			"/api/*"
+		]
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "image-preset-studio",
+			"database_id": "25fef2a1-5727-400f-8117-946caee2a7c5",
+			"migrations_dir": "migrations",
+			"remote": true
+		}
+	]
 }
