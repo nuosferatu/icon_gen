@@ -55,7 +55,7 @@
 .panel-head .download:hover{background:#f3f3f3}.panel-head .download:focus-visible{outline:2px solid #9c9c9c;outline-offset:2px}.panel-head .download svg{width:19px;height:19px}
 [data-theme="dark"] .panel-head .download{border-color:#4c4c4c;color:#d0d0d0}[data-theme="dark"] .panel-head .download:hover{background:#3a3a3a}
 
-.image-wrap img:not(.hidden)){
+.image-wrap img:not(.hidden){
   background-color:#ffffff;
   background-image:conic-gradient(#e8e8e8 25%, #ffffff 0 50%, #e8e8e8 0 75%, #ffffff 0);
   background-size:20px 20px;
