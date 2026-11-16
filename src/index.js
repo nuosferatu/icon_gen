@@ -77,7 +77,18 @@ export default {
         return json({ ok: true });
       }
       if (url.pathname === '/api/generate' && request.method === 'POST') {
-        return fail('图片生成接口尚未配置。请提供 DeepSeek 生图 API 文档或可运行的请求示例。', 503);
+        const input = await body(request), history = validateHistory(input.history);
+        const preset = input.preset == null ? null : validateSpec(input.preset);
+        const previousSvg = input.previousSvg;
+        if (previousSvg != null && (typeof previousSvg !== 'string' || previousSvg.length > 50000 || !/^<svg[\s>]/i.test(previousSvg.trim()))) return fail('上一张图像无效，请重新开始');
+        const result = await deepseek(env, [
+          {role:'system', content:'你是 SVG 图标设计师。根据用户完整的多轮对话、基础预设和上一版 SVG 生成或修改图标，保留已有要求，以最新明确要求为准。只输出 JSON 对象，必须包含 reply（简短中文说明）、prompt（完整的中文或英文设计规范，最多 1800 字符）和 svg（完整 SVG 源码，最大 50000 字符）。svg 必须有 xmlns 和 viewBox，只用 svg、g、defs、path、rect、circle、ellipse、line、polyline、polygon、linearGradient、radialGradient、stop、title、desc 等标准元素，使用属性描述样式；不允许脚本、事件、外部引用、图片、动画、style、foreignObject。不要 Markdown 代码围栏。'},
+          ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
+          ...history,
+          ...(previousSvg ? [{role:'user',content:`这是上一版 SVG，请在保留未要求修改的部分的基础上应用最新用户要求：\n${previousSvg}`}] : [])
+        ]);
+        if (typeof result.reply !== 'string' || !result.reply.trim() || result.reply.length > 6000 || typeof result.prompt !== 'string' || !result.prompt.trim() || result.prompt.length > 2048 || typeof result.svg !== 'string' || result.svg.length > 50000 || !/^<svg[\s>]/i.test(result.svg.trim()) || !/<\/svg>\s*$/i.test(result.svg)) throw new Error('DeepSeek 返回的图像数据无效，请重试');
+        return json({reply: result.reply, prompt: result.prompt, svg: result.svg.trim()});
       }
       if (url.pathname === '/api/presets' && request.method === 'POST') {
         const input = await body(request), history = validateHistory(input.history);
