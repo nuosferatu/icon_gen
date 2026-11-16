@@ -58,10 +58,16 @@ async function refreshPresets() { presets = (await api('/api/presets')).presets;
 function updateActive() { const el = $('#active-preset'); el.classList.toggle('hidden', !active); el.replaceChildren(); if (active) { const label = document.createElement('span'); label.textContent = `Current preset: ${active.name}`; const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'View structured details'; const pre = document.createElement('pre'); pre.textContent = JSON.stringify(active.spec, null, 2); details.append(summary, pre); el.append(label, details); } renderPresets(); }
 // Prevent active content and external resources in a downloadable SVG.
 function safeSvg(source) {
-  if (typeof source !== 'string' || source.length > 50000 || /<!\s*(?:DOCTYPE|ENTITY)\b|<\?/i.test(source)) throw new Error('Invalid SVG. Please try again.');
+  if (typeof source !== 'string' || source.length > 50000) throw new Error('Invalid SVG size or content. Please try again.');
+  if (/<!\s*(?:DOCTYPE|ENTITY)\b|<\?/i.test(source)) throw new Error('SVG contains an unsupported XML declaration. Please try again.');
   if (!/^<svg\b[^>]*\bxmlns\s*=/i.test(source)) source = source.replace(/^<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
-  if (doc.querySelector('parsererror') || doc.documentElement.localName !== 'svg' || doc.documentElement.namespaceURI !== 'http://www.w3.org/2000/svg') throw new Error('Invalid SVG. Please try again.');
+  const parseError = doc.querySelector('parsererror');
+  if (parseError) {
+    const detail = parseError.textContent.replace(/\s+/g, ' ').trim().slice(0, 240);
+    throw new Error('Invalid SVG XML' + (detail ? ': ' + detail : '. Please try again.'));
+  }
+  if (doc.documentElement.localName !== 'svg' || doc.documentElement.namespaceURI !== 'http://www.w3.org/2000/svg') throw new Error('Invalid SVG root or namespace. Please try again.');
   for (const el of [doc.documentElement, ...doc.documentElement.querySelectorAll('*')]) {
     if (el.namespaceURI !== 'http://www.w3.org/2000/svg' || /^(script|foreignObject|iframe|object|embed|a)$/i.test(el.localName)) throw new Error('The SVG contains unsafe content. Please try again.');
     if (el.localName.toLowerCase() === 'style' && /@import|url\s*\((?!\s*['"]?#)/i.test(el.textContent)) throw new Error('The SVG contains external resources. Please try again.');

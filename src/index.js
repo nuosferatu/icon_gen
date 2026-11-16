@@ -88,7 +88,7 @@ export default {
         const previousSvg = input.previousSvg;
         if (previousSvg != null && (typeof previousSvg !== 'string' || previousSvg.length > 50000 || !/^<svg[\s>]/i.test(previousSvg.trim()))) return fail('The previous image is invalid. Please start a new chat.');
         const raw = await deepseek(env, [
-          {role:'system', content:'请根据用户的描述和多轮对话生成图像。用 SVG 格式表达画面，返回完整 SVG 源码。图像的内容、风格、颜色和构图遵循用户要求；如有基础预设，以用户最新的明确修改为准。'},
+          {role:'system', content:'请根据用户的描述和多轮对话生成图像。用 SVG 格式表达画面，返回完整、可解析的 SVG 源码，确保标签闭合、属性使用引号、特殊字符正确转义，并在根元素声明 SVG 命名空间。图像的内容、风格、颜色和构图遵循用户要求；如有基础预设，以用户最新的明确修改为准。'},
           ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
           ...(previousSvg ? [{role:'system',content:`上一版图像的 SVG 源码：\n${previousSvg}\n请根据接下来的对话修改或保留画面。`}] : []),
           ...history
