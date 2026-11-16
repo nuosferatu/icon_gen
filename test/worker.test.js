@@ -52,7 +52,7 @@ test('generates SVG with DeepSeek, revises it and persists a structured preset',
 test('rejects malformed model responses', async () => {
   const env = environment(), token = await login(env), originalFetch = globalThis.fetch;
   globalThis.fetch = async () => Response.json({choices:[{message:{content:'not an SVG'}}]});
-  try { const response = await worker.fetch(request('/api/generate','POST',{history:[{role:'user',content:'图标'}]},token),env); assert.equal(response.status,400); assert.match((await response.json()).error,/未返回完整的 SVG/); } finally { globalThis.fetch = originalFetch; }
+  try { const response = await worker.fetch(request('/api/generate','POST',{history:[{role:'user',content:'图标'}]},token),env); assert.equal(response.status,400); assert.match((await response.json()).error,/did not return a complete SVG/); } finally { globalThis.fetch = originalFetch; }
 });
 
 test('summarizes the full image request and loaded preset using structured output', async () => {
