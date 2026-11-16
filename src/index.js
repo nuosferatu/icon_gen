@@ -42,7 +42,7 @@ async function deepseek(env, messages, structured = true) {
   if (!structured) return content;
   try { return JSON.parse(content); } catch { throw new Error('DeepSeek returned invalid structured content. Please try again.'); }
 }
-const requirementRules = '必须根据完整对话逐项判断生图需求是否仍然有效。用户说“撤回上一个要求”时，结合上下文定位最近一项被撤回的生图要求，从最终结果中完全移除对应要求；用户明确撤回、删除或取消某个之前提出的需求时，也必须移除该需求，包括它来自基础预设的情况。已撤回或删除的要求不得以历史、待定、说明或其他字段重新出现。仅当用户明确禁止某内容时，才把它记录为排除项；撤回一个要求不等于禁止该内容。未被撤回的要求继续保留。若撤回对象不明确，不要猜测具体对象。';
+const requirementRules = '逐轮梳理完整对话中生图需求的增加、修改、撤销和禁止，特别检查最新一条用户消息。遇到“撤回这个要求”“撤销上一个要求”等说法，根据前文确定所指的具体要求；如果明确指定某个要求，就定位该要求，包括来自基础预设的要求。用户明确撤销的内容，不得作为当前的正面需求、风格、细节、约束或生成提示词保留。可以彻底省略该内容；若需要提醒后续生图避免它，只能在排除项中以明确否定形式写出，例如“不要像素风”，绝不能写成“风格：像素风”。例如：用户先说“做一个像素风图标”，随后说“撤销像素风这个要求”，最终摘要不得再把像素风当作风格；可以省略风格或写排除项“不要像素风”。当用户之后明确重新提出该要求，以最新要求为准。保留其他未撤销的要求。撤销对象不明确时不要猜测。输出前逐字段检查：任何已撤销的要求都不能以正面描述出现，包括嵌套字段、自由文本与生成提示词；排除项必须表达清楚否定含义。';
 function validateSpec(spec) {
   if (!spec || typeof spec !== 'object' || Array.isArray(spec) || typeof spec.prompt !== 'string' || !spec.prompt.trim() || spec.prompt.length > 2048 || JSON.stringify(spec).length > 30000) throw new Error('Invalid preset');
   return spec;
@@ -109,7 +109,8 @@ export default {
         const summary = await deepseek(env, [
           {role:'system', content:'你的任务是压缩关于生图需求的对话上下文，而不是总结普通聊天或评价生成结果。综合基础预设与全部对话，提取当前有效的图像生成要求；用户后续明确修改覆盖旧要求，未被修改的要求保留。输出 JSON 对象，按需包含主体、风格、构图、色彩、背景、细节、约束、排除项和未明确的信息。尽量具体、简洁，不要虚构用户未提出的要求，不要把助手的“已生成”等状态当作画面描述。所有字段名称和描述使用中文，专有名词可保留原文。只输出 JSON。' + requirementRules},
           ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
-          ...history
+          ...history,
+          {role:'user',content:'请根据以上实际对话生成生图需求 JSON。先检查最新用户消息是否撤销或否定了先前要求；如果有，定位该要求，并逐字段检查它没有被当作有效需求保留。只返回最终 JSON。'}
         ]);
         if (!summary || typeof summary !== 'object' || Array.isArray(summary) || JSON.stringify(summary).length > 30000) throw new Error('DeepSeek returned an invalid image requirements summary. Please try again.');
         return json({summary});
@@ -122,7 +123,7 @@ export default {
         const spec = validateSpec(await deepseek(env, [
           {role:'system', content:'你是图像生成规范整理专家。根据基础预设、全部对话及最终生成提示词，整合成具体、详细、完整、约束明确的可复用 JSON 规范。保留用户最新修改，区分明确要求与未指定内容，不要虚构用户要求。字段值使用中文，专有名词可保留原文。输出 JSON 对象，包含 title、subject、composition、style、palette、lighting、background、constraints（数组）、avoid（数组）、prompt（中文完整提示词，不超过 1800 字符）。只输出 JSON。' + requirementRules},
           ...(previous ? [{role:'system',content:`基础预设：${JSON.stringify(previous)}`}] : []), ...history,
-          {role:'user',content:`最终用于生成满意图片的提示词：${input.lastPrompt}。请生成可复用的结构化 JSON 预设。`}
+          {role:'user',content:`用户最后一条输入（可能包含撤销或删除）：${input.lastPrompt}。请遵循完整对话中最新的有效要求，生成可复用的结构化 JSON 预设。`}
         ]));
         const id = crypto.randomUUID(), created_at = new Date().toISOString();
         await env.DB.prepare('INSERT INTO presets (id, name, spec, created_at) VALUES (?, ?, ?, ?)').bind(id, name, JSON.stringify(spec), created_at).run();

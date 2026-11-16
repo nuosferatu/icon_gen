@@ -63,10 +63,12 @@ test('summarizes the full image request and loaded preset using structured outpu
     const payload = JSON.parse(options.body);
     assert.equal(payload.response_format.type,'json_object');
     assert.match(payload.messages[0].content,/生图需求/);
-    assert.match(payload.messages[0].content,/撤回上一个要求/);
-    assert.match(payload.messages[0].content,/撤回一个要求不等于禁止/);
+    assert.match(payload.messages[0].content,/撤销上一个要求/);
+    assert.match(payload.messages[0].content,/不要像素风/);
+    assert.match(payload.messages[0].content,/不能以正面描述出现/);
     assert.ok(payload.messages.some(m => m.content.includes('minimal icon')));
-    assert.deepEqual(payload.messages.slice(-history.length), history);
+    assert.deepEqual(payload.messages.slice(-(history.length + 1), -1), history);
+    assert.match(payload.messages.at(-1).content, /撤销或否定/);
     return Response.json({choices:[{message:{content:JSON.stringify({主体:'小猫',色彩:'蓝色',风格:'极简'})}}]});
   };
   try {
@@ -87,7 +89,7 @@ test('uses updated requirements and the previous image when regenerating after a
     const payload = JSON.parse(options.body);
     calls++;
     if (calls === 1) {
-      assert.match(payload.messages[0].content, /撤回上一个要求/);
+      assert.match(payload.messages[0].content, /撤销上一个要求/);
       return Response.json({choices:[{message:{content:JSON.stringify({主体:'圆'})}}]});
     }
     assert.match(payload.messages[0].content, /回退该要求对上一版图像造成的修改/);
