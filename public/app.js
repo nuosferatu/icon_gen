@@ -58,7 +58,7 @@ async function refreshPresets() { presets = (await api('/api/presets')).presets;
 function updateActive() { const el = $('#active-preset'); el.classList.toggle('hidden', !active); el.replaceChildren(); if (active) { const label = document.createElement('span'); label.textContent = `Current preset: ${active.name}`; const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'View structured details'; const pre = document.createElement('pre'); pre.textContent = JSON.stringify(active.spec, null, 2); details.append(summary, pre); el.append(label, details); } renderPresets(); }
 // Prevent active content and external resources in a downloadable SVG.
 function safeSvg(source) {
-  if (typeof source !== 'string' || source.length > 50000 || /<!|<\?/i.test(source)) throw new Error('Invalid SVG. Please try again.');
+  if (typeof source !== 'string' || source.length > 50000 || /<!\s*(?:DOCTYPE|ENTITY)\b|<\?/i.test(source)) throw new Error('Invalid SVG. Please try again.');
   if (!/^<svg\b[^>]*\bxmlns\s*=/i.test(source)) source = source.replace(/^<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
   if (doc.querySelector('parsererror') || doc.documentElement.localName !== 'svg' || doc.documentElement.namespaceURI !== 'http://www.w3.org/2000/svg') throw new Error('Invalid SVG. Please try again.');

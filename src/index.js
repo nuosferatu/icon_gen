@@ -28,7 +28,7 @@ function validateHistory(history) {
 }
 async function deepseek(env, messages, structured = true) {
   if (!env.DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY is not configured');
-  const payload = { model: env.DEEPSEEK_MODEL || 'deepseek-flash', messages, temperature: 0.5 };
+  const payload = { model: env.DEEPSEEK_MODEL || 'deepseek-flash', messages, thinking: { type: 'disabled' }, temperature: 0.5 };
   if (structured) payload.response_format = { type: 'json_object' };
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.DEEPSEEK_API_KEY}` },

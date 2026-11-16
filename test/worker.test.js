@@ -32,7 +32,7 @@ test('generates SVG with DeepSeek, revises it and persists a structured preset',
   const env = environment(), token = await login(env), originalFetch = globalThis.fetch; let call = 0;
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="green"/></svg>';
   globalThis.fetch = async (_url, options) => {
-    const payload = JSON.parse(options.body); assert.equal(payload.model,'deepseek-flash'); call++;
+    const payload = JSON.parse(options.body); assert.equal(payload.model,'deepseek-flash'); assert.deepEqual(payload.thinking,{type:'disabled'}); call++;
     if (call === 2) { assert.ok(payload.messages.some(message => message.content.includes(svg))); assert.ok(payload.messages.some(message => message.content.includes('蓝色'))); }
     const content = call < 3 ? svg : JSON.stringify({title:'绿色小猫',constraints:['绿色'],prompt:'a green cat'});
     if (call < 3) assert.equal(payload.response_format, undefined);
