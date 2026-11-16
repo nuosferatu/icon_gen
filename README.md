@@ -12,17 +12,18 @@
 
    ```sh
    npm install
+   test -f wrangler.jsonc || cp wrangler.example.jsonc wrangler.jsonc
    npx wrangler login
    npx wrangler whoami
    ```
 
-2. 如需在其他账户创建数据库，运行：
+2. 创建 D1 数据库（如果已经有数据库，可跳过创建）：
 
    ```sh
    npx wrangler d1 create image-preset-studio
    ```
 
-   项目当前配置绑定了现有的 D1 数据库。若要在其他账户部署，创建数据库后将输出中的 `database_id` 填入 `wrangler.jsonc`，并根据需要修改 `database_name` 和 Worker 的 `name`。
+   将现有或新建数据库的 `database_id` 填入本地 `wrangler.jsonc`，替换模板中的占位符，并根据需要修改 `database_name` 和 Worker 的 `name`。本地 `wrangler.jsonc` 不会提交到 Git。
 
 3. 首次使用该数据库时，初始化远程数据库：
 
