@@ -1,5 +1,22 @@
 const $ = (selector) => document.querySelector(selector);
 let history = [], presets = [], active = null, lastPrompt = '', lastSvg = '', imageUrl = '', busy = false;
+function updateThemeButton() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  const label = dark ? '切换到浅色主题' : '切换到深色主题';
+  const button = $('#theme-toggle');
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+  button.setAttribute('aria-pressed', String(dark));
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#151b17' : '#f8f7f4');
+}
+$('#theme-toggle').onclick = () => {
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('icon-gen-theme', theme); } catch (_) {}
+  updateThemeButton();
+};
+updateThemeButton();
+
 const toast = (message) => { const el = $('#toast'); el.textContent = message; el.classList.remove('hidden'); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.add('hidden'), 4500); };
 async function api(path, options = {}) {
   const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers }, ...(options.body ? { body: JSON.stringify(options.body) } : {}) });

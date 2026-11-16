@@ -5,12 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f8f7f4">
   <title>画境</title>
+  <script>try { if (localStorage.getItem('icon-gen-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (_) {}</script>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <header>
   <a class="brand" href="/"><span>画境</span></a>
-  <button id="logout" class="link hidden">退出登录</button>
+  <div class="header-right">
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换到深色主题" title="切换到深色主题" aria-pressed="false">
+      <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.9 13.2A8.5 8.5 0 0 1 10.8 3.1 8.5 8.5 0 1 0 20.9 13.2Z"/></svg>
+      <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button id="logout" class="link hidden">退出登录</button>
+  </div>
 </header>
 <main>
   <section id="login" class="login hidden">
