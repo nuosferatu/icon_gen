@@ -56,7 +56,7 @@ async function api(path, options = {}) {
 }
 function showLogin() { $('#login').classList.remove('hidden'); $('#studio').classList.add('hidden'); $('#logout').classList.add('hidden'); $('#sidebar-toggle').classList.add('hidden'); }
 async function showStudio() { $('#login').classList.add('hidden'); $('#studio').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#sidebar-toggle').classList.remove('hidden'); await refreshPresets(); }
-function setBusy(value) { busy = value; $('#chat-form button[type=submit]').disabled = value; $('#save').disabled = value || !lastPrompt; $('#message').disabled = value; $('#new').disabled = value; $('#logout').disabled = value; document.querySelectorAll('.preset-load,.preset-delete').forEach(el => el.disabled = value); }
+function setBusy(value) { busy = value; $('#chat-form button[type=submit]').disabled = value; $('#save').disabled = value || !lastPrompt; $('#new').disabled = value; $('#logout').disabled = value; document.querySelectorAll('.preset-load,.preset-delete').forEach(el => el.disabled = value); }
 function renderPresets() {
   $('#preset-count').textContent = presets.length; const list = $('#presets'); list.replaceChildren();
   if (!presets.length) { const p = document.createElement('p'); p.className = 'empty-list'; p.textContent = 'No presets yet'; list.append(p); return; }
@@ -112,6 +112,7 @@ $('#chat-form').onsubmit = async e => {
   setBusy(true);
   const pending = addMessage('user', content);
   $('#message').value = '';
+  $('#message').focus();
   const loading = addMessage('assistant','Generating image…');
   try {
     const data = await api('/api/generate',{method:'POST',body:{history:draft,preset:active?.spec || null,previousSvg:lastSvg || null}});
@@ -141,7 +142,10 @@ $('#chat-form').onsubmit = async e => {
       $('#summary-content').classList.add('hidden');
     }
   } catch (error) {
-    pending.remove(); loading.remove(); $('#message').value = content; toast(error.message);
+    pending.remove(); loading.remove();
+    const nextDraft = $('#message').value;
+    $('#message').value = content + (nextDraft ? '\n' + nextDraft : '');
+    toast(error.message);
   } finally { setBusy(false); }
 };
 $('#save').onclick = async () => { if (busy || !lastPrompt) return; const name = prompt('Name this preset:'); if (!name?.trim()) return; setBusy(true); try { await api('/api/presets',{method:'POST',body:{name:name.trim(),history,preset:active?.spec || null,lastPrompt}}); await refreshPresets(); toast('Preset saved', false); } catch(e) { toast(e.message); } finally { setBusy(false); } };
