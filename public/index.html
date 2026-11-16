@@ -1,11 +1,61 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f8f7f4"><title>画境 · 图像预设工作室</title><link rel="stylesheet" href="/style.css"></head>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f8f7f4">
+  <title>画境</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
 <body>
-<header><a class="brand" href="/">✳ <span>画境</span><small>IMAGE STUDIO</small></a><div class="header-right"><span class="status"><i></i> 创作空间</span><button id="logout" class="link hidden">退出登录</button></div></header>
+<header>
+  <a class="brand" href="/"><span>画境</span></a>
+  <button id="logout" class="link hidden">退出登录</button>
+</header>
 <main>
-<section id="login" class="login hidden"><div class="login-card"><div class="eyebrow">YOUR CREATIVE SPACE</div><h1>让想象，<br><em>慢慢成形。</em></h1><p>通过对话探索画面，把满意的灵感保存为可复用的创作预设。</p><form id="login-form"><label for="password">访问密码</label><input id="password" type="password" placeholder="请输入访问密码" required autocomplete="current-password"><button class="primary" type="submit">进入工作室 <span>↗</span></button></form><div class="login-foot">PRIVATE BY DESIGN <span>✳</span></div></div></section>
-<section id="studio" class="studio hidden">
-<aside class="sidebar"><div class="side-heading"><div><div class="eyebrow">YOUR LIBRARY</div><h2>灵感预设 <span id="preset-count">0</span></h2></div><span class="side-icon">✳</span></div><p>收藏喜欢的画面语言，<br>让下一次创作从灵感开始。</p><button id="new" class="outline">＋ 开始新创作</button><div class="divider"></div><div class="list-label">已保存 <span>↘</span></div><div id="presets" class="preset-list"></div><div class="sidebar-bottom">MADE FOR YOUR IDEAS <span>✴</span></div></aside>
-<div class="workspace"><div class="workspace-top"><div><div class="eyebrow">CREATE SOMETHING UNIQUE</div><h1>从一个想法，<em>开始。</em></h1><p>描述你的灵感，在一次次对话中找到理想画面。</p></div><div class="top-mark">✳</div></div><div id="active-preset" class="active-preset hidden"></div>
-<div class="panels"><section class="conversation panel"><div class="panel-head"><div><span class="number">01 / 对话</span><h3>描述你的想法</h3></div><span class="circle">↗</span></div><div id="messages" class="messages"><div class="empty-chat"><div class="sparkle">✳</div><strong>你的创意，从这里开始</strong><p>试试描述主体、风格或色彩，<br>也可以在生成后继续调整。</p><div class="suggestions"><button data-suggestion="一只圆滚滚的橘猫，手绘水彩风格，柔和的奶油色背景">水彩小猫 ↗</button><button data-suggestion="极简咖啡店标志，深绿色和米白色，干净的矢量图形">咖啡店标志 ↗</button></div></div></div><form id="chat-form" class="composer"><textarea id="message" placeholder="描述你想要的画面，或告诉我如何调整…" rows="3" maxlength="6000" required></textarea><div class="composer-foot"><span>图片生成接口待配置</span><button type="submit" class="send" aria-label="发送">↑</button></div></form></section>
-<section class="preview panel"><div class="panel-head"><div><span class="number">02 / 画布</span><h3>画面预览</h3></div><span class="circle">✧</span></div><div id="image-wrap" class="image-wrap"><div class="empty-image"><span>✺</span><strong>灵感即将呈现</strong><p>发送描述后，你的画面将出现在这里</p></div><img id="image" class="hidden" alt="AI 生成的图片"></div><div class="preview-foot"><div><strong id="image-title">等待创作</strong><small id="image-subtitle">YOUR CANVAS AWAITS</small></div><a id="download" class="download hidden" download="image.jpg">下载图片 ↗</a></div><button id="save" class="primary save" disabled>满意了，保存为预设 <span>↗</span></button><p class="hint">预设保存结构化创作信息，图片请单独下载。</p></section></div><div class="workspace-footer"><span>POWERED BY DEEPSEEK & CLOUDFLARE</span><span>CREATE · REFINE · KEEP</span></div></div></section></main><div id="toast" class="toast hidden" role="status"></div><script src="/app.js" type="module"></script></body></html>
+  <section id="login" class="login hidden">
+    <div class="login-card">
+      <h1>登录</h1>
+      <form id="login-form">
+        <label for="password">访问密码</label>
+        <input id="password" type="password" placeholder="输入密码" required autocomplete="current-password">
+        <button class="primary" type="submit">登录</button>
+      </form>
+    </div>
+  </section>
+  <section id="studio" class="studio hidden">
+    <aside class="sidebar">
+      <div class="side-heading"><h2>预设 <span id="preset-count">0</span></h2></div>
+      <button id="new" class="outline">＋ 新建对话</button>
+      <div class="divider"></div>
+      <div id="presets" class="preset-list"></div>
+    </aside>
+    <div class="workspace">
+      <div class="workspace-top"><h1>图像工作室</h1></div>
+      <div id="active-preset" class="active-preset hidden"></div>
+      <div class="panels">
+        <section class="conversation panel">
+          <div class="panel-head"><h3>对话</h3></div>
+          <div id="messages" class="messages"></div>
+          <form id="chat-form" class="composer">
+            <textarea id="message" placeholder="输入图像需求或修改意见" rows="3" maxlength="6000" required></textarea>
+            <div class="composer-foot"><span>图片生成接口待接入</span><button type="submit" class="send" aria-label="发送">↑</button></div>
+          </form>
+        </section>
+        <section class="preview panel">
+          <div class="panel-head"><h3>图像预览</h3></div>
+          <div id="image-wrap" class="image-wrap">
+            <div class="empty-image">暂无图片</div>
+            <img id="image" class="hidden" alt="生成的图片">
+          </div>
+          <div class="preview-foot"><a id="download" class="download hidden" download="image.jpg">下载图片</a></div>
+          <button id="save" class="primary save" disabled>保存预设</button>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="toast" class="toast hidden" role="status"></div>
+<script src="/app.js" type="module"></script>
+</body>
+</html>
