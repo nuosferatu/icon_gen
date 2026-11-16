@@ -26,15 +26,21 @@ function validateHistory(history) {
   if (!history.some(m => m.role === 'user')) throw new Error('请先输入创作需求');
   return history.map(({role, content}) => ({role, content}));
 }
-async function deepseek(env, messages) {
+async function deepseek(env, messages, structured = true) {
   if (!env.DEEPSEEK_API_KEY) throw new Error('尚未配置 DEEPSEEK_API_KEY');
+  const payload = { model: env.DEEPSEEK_MODEL || 'deepseek-flash', messages, temperature: 0.5 };
+  if (structured) payload.response_format = { type: 'json_object' };
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.DEEPSEEK_API_KEY}` },
-    body: JSON.stringify({ model: env.DEEPSEEK_MODEL || 'deepseek-flash', messages, response_format: { type: 'json_object' }, temperature: 0.5 })
+    body: JSON.stringify(payload)
   });
   if (!response.ok) { console.error('DeepSeek request failed', response.status); throw new Error(`DeepSeek 请求失败（HTTP ${response.status}），请检查密钥、余额及模型配置`); }
   const data = await response.json();
-  try { return JSON.parse(data.choices[0].message.content); } catch { throw new Error('DeepSeek 返回的结构化内容无效，请重试'); }
+  if (data.choices?.[0]?.finish_reason === 'length') throw new Error('DeepSeek 输出不完整，请重试');
+  const content = data.choices?.[0]?.message?.content;
+  if (typeof content !== 'string' || !content.trim()) throw new Error('DeepSeek 没有返回内容，请重试');
+  if (!structured) return content;
+  try { return JSON.parse(content); } catch { throw new Error('DeepSeek 返回的结构化内容无效，请重试'); }
 }
 function validateSpec(spec) {
   if (!spec || typeof spec !== 'object' || Array.isArray(spec) || typeof spec.prompt !== 'string' || !spec.prompt.trim() || spec.prompt.length > 2048 || JSON.stringify(spec).length > 30000) throw new Error('预设内容无效');
@@ -81,14 +87,17 @@ export default {
         const preset = input.preset == null ? null : validateSpec(input.preset);
         const previousSvg = input.previousSvg;
         if (previousSvg != null && (typeof previousSvg !== 'string' || previousSvg.length > 50000 || !/^<svg[\s>]/i.test(previousSvg.trim()))) return fail('上一张图像无效，请重新开始');
-        const result = await deepseek(env, [
-          {role:'system', content:'你是 SVG 图标设计师。根据用户完整的多轮对话、基础预设和上一版 SVG 生成或修改图标，保留已有要求，以最新明确要求为准。只输出 JSON 对象，必须包含 reply（简短中文说明）、prompt（完整的中文或英文设计规范，最多 1800 字符）和 svg（完整 SVG 源码，最大 50000 字符）。svg 必须有 xmlns 和 viewBox，只用 svg、g、defs、path、rect、circle、ellipse、line、polyline、polygon、linearGradient、radialGradient、stop、title、desc 等标准元素，使用属性描述样式；不允许脚本、事件、外部引用、图片、动画、style、foreignObject。不要 Markdown 代码围栏。'},
+        const raw = await deepseek(env, [
+          {role:'system', content:'请根据用户的描述和多轮对话生成图像。用 SVG 格式表达画面，返回完整 SVG 源码。图像的内容、风格、颜色和构图遵循用户要求；如有基础预设，以用户最新的明确修改为准。'},
           ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
-          ...history,
-          ...(previousSvg ? [{role:'user',content:`这是上一版 SVG，请在保留未要求修改的部分的基础上应用最新用户要求：\n${previousSvg}`}] : [])
-        ]);
-        if (typeof result.reply !== 'string' || !result.reply.trim() || result.reply.length > 6000 || typeof result.prompt !== 'string' || !result.prompt.trim() || result.prompt.length > 2048 || typeof result.svg !== 'string' || result.svg.length > 50000 || !/^<svg[\s>]/i.test(result.svg.trim()) || !/<\/svg>\s*$/i.test(result.svg)) throw new Error('DeepSeek 返回的图像数据无效，请重试');
-        return json({reply: result.reply, prompt: result.prompt, svg: result.svg.trim()});
+          ...(previousSvg ? [{role:'system',content:`上一版图像的 SVG 源码：\n${previousSvg}\n请根据接下来的对话修改或保留画面。`}] : []),
+          ...history
+        ], false);
+        const start = raw.indexOf('<svg'), end = raw.lastIndexOf('</svg>');
+        if (start < 0 || end < start || end + 6 - start > 50000) throw new Error('DeepSeek 未返回完整的 SVG 图像，请重试');
+        const svg = raw.slice(start, end + 6);
+        const latest = [...history].reverse().find(message => message.role === 'user').content;
+        return json({reply: '已生成', prompt: latest.slice(0, 2048), svg});
       }
       if (url.pathname === '/api/presets' && request.method === 'POST') {
         const input = await body(request), history = validateHistory(input.history);

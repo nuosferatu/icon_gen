@@ -34,8 +34,10 @@ test('generates SVG with DeepSeek, revises it and persists a structured preset',
   globalThis.fetch = async (_url, options) => {
     const payload = JSON.parse(options.body); assert.equal(payload.model,'deepseek-flash'); call++;
     if (call === 2) { assert.ok(payload.messages.some(message => message.content.includes(svg))); assert.ok(payload.messages.some(message => message.content.includes('蓝色'))); }
-    const result = call < 3 ? {reply:'生成图标',prompt:'a green cat',svg} : {title:'绿色小猫',constraints:['绿色'],prompt:'a green cat'};
-    return Response.json({choices:[{message:{content:JSON.stringify(result)}}]});
+    const content = call < 3 ? svg : JSON.stringify({title:'绿色小猫',constraints:['绿色'],prompt:'a green cat'});
+    if (call < 3) assert.equal(payload.response_format, undefined);
+    else assert.equal(payload.response_format.type, 'json_object');
+    return Response.json({choices:[{message:{content}}]});
   };
   try {
     const history=[{role:'user',content:'一只绿色的猫'}];
@@ -49,6 +51,6 @@ test('generates SVG with DeepSeek, revises it and persists a structured preset',
 
 test('rejects malformed model responses', async () => {
   const env = environment(), token = await login(env), originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => Response.json({choices:[{message:{content:JSON.stringify({reply:'ok',prompt:'test',svg:'not an SVG'})}}]});
-  try { const response = await worker.fetch(request('/api/generate','POST',{history:[{role:'user',content:'图标'}]},token),env); assert.equal(response.status,400); assert.match((await response.json()).error,/图像数据无效/); } finally { globalThis.fetch = originalFetch; }
+  globalThis.fetch = async () => Response.json({choices:[{message:{content:'not an SVG'}}]});
+  try { const response = await worker.fetch(request('/api/generate','POST',{history:[{role:'user',content:'图标'}]},token),env); assert.equal(response.status,400); assert.match((await response.json()).error,/未返回完整的 SVG/); } finally { globalThis.fetch = originalFetch; }
 });

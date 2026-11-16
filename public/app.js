@@ -24,17 +24,17 @@ function renderPresets() {
 }
 async function refreshPresets() { presets = (await api('/api/presets')).presets; renderPresets(); }
 function updateActive() { const el = $('#active-preset'); el.classList.toggle('hidden', !active); el.replaceChildren(); if (active) { const label = document.createElement('span'); label.textContent = `当前预设：${active.name}`; const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = '查看结构化信息'; const pre = document.createElement('pre'); pre.textContent = JSON.stringify(active.spec, null, 2); details.append(summary, pre); el.append(label, details); } renderPresets(); }
-// Parse model output as XML and copy only safe SVG elements and attributes.
+// Prevent active content and external resources in a downloadable SVG.
 function safeSvg(source) {
-  if (typeof source !== 'string' || source.length > 50000 || /<!/i.test(source)) throw new Error('生成的 SVG 格式无效，请重试');
+  if (typeof source !== 'string' || source.length > 50000 || /<!|<\?/i.test(source)) throw new Error('生成的 SVG 格式无效，请重试');
+  if (!/^<svg\b[^>]*\bxmlns\s*=/i.test(source)) source = source.replace(/^<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
   if (doc.querySelector('parsererror') || doc.documentElement.localName !== 'svg' || doc.documentElement.namespaceURI !== 'http://www.w3.org/2000/svg') throw new Error('生成的 SVG 格式无效，请重试');
-  const elements = new Set(['svg','g','defs','path','rect','circle','ellipse','line','polyline','polygon','linearGradient','radialGradient','stop','title','desc']);
-  const attributes = new Set(['xmlns','viewBox','width','height','x','y','x1','x2','y1','y2','cx','cy','r','rx','ry','d','points','fill','fill-opacity','fill-rule','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-opacity','stroke-dasharray','stroke-dashoffset','opacity','transform','id','offset','stop-color','stop-opacity','gradientUnits','gradientTransform','fx','fy','fr','preserveAspectRatio','clip-rule']);
   for (const el of [doc.documentElement, ...doc.documentElement.querySelectorAll('*')]) {
-    if (el.namespaceURI !== 'http://www.w3.org/2000/svg' || !elements.has(el.localName)) throw new Error('生成的 SVG 包含不支持的元素，请重试');
+    if (el.namespaceURI !== 'http://www.w3.org/2000/svg' || /^(script|foreignObject|iframe|object|embed|a)$/i.test(el.localName)) throw new Error('生成的 SVG 含不安全内容，请重试');
+    if (el.localName.toLowerCase() === 'style' && /@import|url\s*\((?!\s*['"]?#)/i.test(el.textContent)) throw new Error('生成的 SVG 含外部资源，请重试');
     for (const attr of [...el.attributes]) {
-      if (!attributes.has(attr.name) || /(?:javascript:|https?:|data:|@import|expression\s*\()/i.test(attr.value) || (/url\s*\(/i.test(attr.value) && !/^url\(#[\w-]+\)$/.test(attr.value.trim()))) throw new Error('生成的 SVG 包含不支持的属性，请重试');
+      if (/^on/i.test(attr.localName) || /(?:javascript:|data:|@import|expression\s*\()/i.test(attr.value) || (/url\s*\(/i.test(attr.value) && /url\s*\((?!\s*['"]?#)/i.test(attr.value)) || (/^(?:href|src)$/i.test(attr.localName) && !attr.value.startsWith('#'))) throw new Error('生成的 SVG 含不安全内容，请重试');
     }
   }
   return new XMLSerializer().serializeToString(doc.documentElement);
