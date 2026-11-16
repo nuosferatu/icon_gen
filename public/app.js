@@ -16,6 +16,21 @@ $('#theme-toggle').onclick = () => {
   updateThemeButton();
 };
 updateThemeButton();
+function updateSidebarButton() {
+  const expanded = document.documentElement.dataset.sidebar !== 'closed';
+  const button = $('#sidebar-toggle');
+  const label = expanded ? '收起侧边栏' : '展开侧边栏';
+  button.setAttribute('aria-expanded', String(expanded));
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+}
+$('#sidebar-toggle').onclick = () => {
+  const state = document.documentElement.dataset.sidebar === 'closed' ? 'open' : 'closed';
+  document.documentElement.dataset.sidebar = state;
+  try { localStorage.setItem('icon-gen-sidebar', state); } catch (_) {}
+  updateSidebarButton();
+};
+updateSidebarButton();
 
 const toast = (message) => { const el = $('#toast'); el.textContent = message; el.classList.remove('hidden'); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.add('hidden'), 4500); };
 async function api(path, options = {}) {
@@ -24,8 +39,8 @@ async function api(path, options = {}) {
   if (!response.ok) { if (response.status === 401 && path !== '/api/login') showLogin(); throw new Error(data.error || '请求失败'); }
   return data;
 }
-function showLogin() { $('#login').classList.remove('hidden'); $('#studio').classList.add('hidden'); $('#logout').classList.add('hidden'); }
-async function showStudio() { $('#login').classList.add('hidden'); $('#studio').classList.remove('hidden'); $('#logout').classList.remove('hidden'); await refreshPresets(); }
+function showLogin() { $('#login').classList.remove('hidden'); $('#studio').classList.add('hidden'); $('#logout').classList.add('hidden'); $('#sidebar-toggle').classList.add('hidden'); }
+async function showStudio() { $('#login').classList.add('hidden'); $('#studio').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#sidebar-toggle').classList.remove('hidden'); await refreshPresets(); }
 function setBusy(value) { busy = value; $('#chat-form button[type=submit]').disabled = value; $('#save').disabled = value || !lastPrompt; $('#message').disabled = value; $('#new').disabled = value; $('#logout').disabled = value; document.querySelectorAll('.preset-load,.preset-delete').forEach(el => el.disabled = value); }
 function renderPresets() {
   $('#preset-count').textContent = presets.length; const list = $('#presets'); list.replaceChildren();

@@ -4,8 +4,8 @@
 .active-preset details{margin-top:8px}.active-preset summary{cursor:pointer;font-weight:600}.active-preset pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto;font-size:11px;line-height:1.6;color:#536b56}
 .login h1{margin:0 0 28px}.sidebar .side-heading{margin-bottom:20px}.sidebar .side-heading h2{margin:0}.panel-head h3{margin:0}.preview-foot:has(.download.hidden){display:none}
 
-@media(min-width:1250px){.panels{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(min-width:851px) and (max-width:1249px){.summary{grid-column:1/-1;min-height:240px}}
+@media(min-width:1001px){.panels{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:851px) and (max-width:1000px){.panels{grid-template-columns:1fr}}
 .summary-status{margin-top:22px;color:#8a968b;font-size:12px;line-height:1.6}.summary-content{flex:1;margin:14px 0 0;padding:14px;background:#f6f8f4;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:480px;color:#425646;font-size:12px;line-height:1.7}.summary-status:empty{display:none}
 
 .theme-toggle{width:36px;height:36px;display:grid;place-items:center;border:1px solid #e5eae3;border-radius:8px;background:transparent;color:#607a65}
@@ -42,3 +42,11 @@
 [data-theme="dark"] .primary,[data-theme="dark"] .send{background:#658f6d;color:#fff}
 [data-theme="dark"] .primary:hover,[data-theme="dark"] .send:hover{background:#779f7e}
 [data-theme="dark"] .toast{background:#c4ddc8;color:#1c3020}
+
+.header-left{display:flex;align-items:center;gap:14px}
+.sidebar-toggle{width:36px;height:36px;display:grid;place-items:center;border:1px solid #e5eae3;border-radius:8px;background:transparent;color:#607a65}
+.sidebar-toggle:hover{background:#f0f4ee}.sidebar-toggle:focus-visible{outline:2px solid #7fa788;outline-offset:2px}.sidebar-toggle svg{width:19px;height:19px}
+[data-sidebar="closed"] .sidebar{display:none}
+[data-sidebar="closed"] .studio{grid-template-columns:minmax(0,1fr)}
+[data-theme="dark"] .sidebar-toggle{border-color:#425047;color:#c4d5c6}
+[data-theme="dark"] .sidebar-toggle:hover{background:#303d33}

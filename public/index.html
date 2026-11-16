@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f8f7f4">
   <title>画境</title>
-  <script>try { if (localStorage.getItem('icon-gen-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (_) {}</script>
+  <script>try { if (localStorage.getItem('icon-gen-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; if (localStorage.getItem('icon-gen-sidebar') === 'closed') document.documentElement.dataset.sidebar = 'closed'; } catch (_) {}</script>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <header>
-  <a class="brand" href="/"><span>画境</span></a>
+  <div class="header-left">
+    <button id="sidebar-toggle" class="sidebar-toggle hidden" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="收起侧边栏" title="收起侧边栏">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+    </button>
+    <a class="brand" href="/"><span>画境</span></a>
+  </div>
   <div class="header-right">
     <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换到深色主题" title="切换到深色主题" aria-pressed="false">
       <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.9 13.2A8.5 8.5 0 0 1 10.8 3.1 8.5 8.5 0 1 0 20.9 13.2Z"/></svg>
@@ -31,7 +36,7 @@
     </div>
   </section>
   <section id="studio" class="studio hidden">
-    <aside class="sidebar">
+    <aside id="sidebar" class="sidebar">
       <div class="side-heading"><h2>预设 <span id="preset-count">0</span></h2></div>
       <button id="new" class="outline">＋ 新建对话</button>
       <div class="divider"></div>
@@ -49,6 +54,11 @@
             <div class="composer-foot"><button type="submit" class="send" aria-label="发送">↑</button></div>
           </form>
         </section>
+        <section class="summary panel">
+          <div class="panel-head"><h3>生图需求摘要</h3></div>
+          <div id="summary-status" class="summary-status" role="status">暂无摘要</div>
+          <pre id="summary-content" class="summary-content hidden"></pre>
+        </section>
         <section class="preview panel">
           <div class="panel-head"><h3>图像预览</h3></div>
           <div id="image-wrap" class="image-wrap">
@@ -57,11 +67,6 @@
           </div>
           <div class="preview-foot"><a id="download" class="download hidden" download="image.svg">下载图片</a></div>
           <button id="save" class="primary save" disabled>保存预设</button>
-        </section>
-        <section class="summary panel">
-          <div class="panel-head"><h3>生图需求摘要</h3></div>
-          <div id="summary-status" class="summary-status" role="status">暂无摘要</div>
-          <pre id="summary-content" class="summary-content hidden"></pre>
         </section>
       </div>
     </div>
