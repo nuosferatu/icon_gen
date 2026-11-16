@@ -114,8 +114,11 @@ $('#chat-form').onsubmit = async e => {
   $('#message').value = '';
   $('#message').focus();
   const loading = addMessage('assistant','Generating image…');
+  const previousSummaryStatus = $('#summary-status').textContent;
+  $('#summary-status').textContent = 'Updating summary…';
   try {
-    const data = await api('/api/generate',{method:'POST',body:{history:draft,preset:active?.spec || null,previousSvg:lastSvg || null}});
+    const result = await api('/api/summarize',{method:'POST',body:{history:draft,preset:active?.spec || null}});
+    const data = await api('/api/generate',{method:'POST',body:{history:draft,preset:active?.spec || null,previousSvg:lastSvg || null,requirements:result.summary}});
     const svg = safeSvg(data.svg);
     const nextUrl = URL.createObjectURL(new Blob([svg], {type:'image/svg+xml'}));
     if (imageUrl) URL.revokeObjectURL(imageUrl);
@@ -128,20 +131,11 @@ $('#chat-form').onsubmit = async e => {
     $('.empty-image').classList.add('hidden');
     $('#download').href = imageUrl;
     $('#download').classList.remove('hidden');
-    $('#summary-status').textContent = 'Updating summary…';
-    try {
-      const result = await api('/api/summarize',{method:'POST',body:{history,preset:active?.spec || null}});
-      $('#summary-content').textContent = JSON.stringify(result.summary, null, 2);
-      $('#summary-content').classList.remove('hidden');
-      $('#summary-status').textContent = '';
-    } catch (error) {
-      $('#summary-status').textContent = 'Summary update failed: ' + error.message;
-      toast('Summary update failed: ' + error.message);
-      // A previous summary describes an earlier image, so do not present it as current.
-      $('#summary-content').textContent = '';
-      $('#summary-content').classList.add('hidden');
-    }
+    $('#summary-content').textContent = JSON.stringify(result.summary, null, 2);
+    $('#summary-content').classList.remove('hidden');
+    $('#summary-status').textContent = '';
   } catch (error) {
+    $('#summary-status').textContent = previousSummaryStatus;
     pending.remove(); loading.remove();
     const nextDraft = $('#message').value;
     $('#message').value = content + (nextDraft ? '\n' + nextDraft : '');

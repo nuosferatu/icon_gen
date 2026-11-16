@@ -76,3 +76,33 @@ test('summarizes the full image request and loaded preset using structured outpu
     assert.equal((await worker.fetch(request('/api/summarize','POST',{history,preset}),env)).status,401);
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('uses updated requirements and the previous image when regenerating after a withdrawal', async () => {
+  const env = environment(), token = await login(env), originalFetch = globalThis.fetch;
+  const previousSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path id="star" d="M1 1L9 9"/></svg>';
+  const revisedSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3"/></svg>';
+  const history = [{role:'user',content:'画一个圆'}, {role:'assistant',content:'已生成'}, {role:'user',content:'加一颗星'}, {role:'assistant',content:'已生成'}, {role:'user',content:'撤销上一个要求'}];
+  let calls = 0;
+  globalThis.fetch = async (_url, options) => {
+    const payload = JSON.parse(options.body);
+    calls++;
+    if (calls === 1) {
+      assert.match(payload.messages[0].content, /撤回上一个要求/);
+      return Response.json({choices:[{message:{content:JSON.stringify({主体:'圆'})}}]});
+    }
+    assert.match(payload.messages[0].content, /回退该要求对上一版图像造成的修改/);
+    assert.ok(payload.messages.some(message => message.content.includes(previousSvg)));
+    assert.ok(payload.messages.some(message => message.content.includes('当前有效生图需求') && message.content.includes('圆')));
+    assert.equal(payload.messages.at(-1).content, '撤销上一个要求');
+    return Response.json({choices:[{message:{content:revisedSvg}}]});
+  };
+  try {
+    const summaryResponse = await worker.fetch(request('/api/summarize','POST',{history},token),env);
+    assert.equal(summaryResponse.status,200);
+    const {summary} = await summaryResponse.json();
+    const imageResponse = await worker.fetch(request('/api/generate','POST',{history,previousSvg,requirements:summary},token),env);
+    assert.equal(imageResponse.status,200);
+    assert.equal((await imageResponse.json()).svg,revisedSvg);
+    assert.equal(calls,2);
+  } finally { globalThis.fetch = originalFetch; }
+});

@@ -88,10 +88,13 @@ export default {
         const preset = input.preset == null ? null : validateSpec(input.preset);
         const previousSvg = input.previousSvg;
         if (previousSvg != null && (typeof previousSvg !== 'string' || previousSvg.length > 50000 || !/^<svg[\s>]/i.test(previousSvg.trim()))) return fail('The previous image is invalid. Please start a new chat.');
+        const requirements = input.requirements;
+        if (requirements != null && (typeof requirements !== 'object' || Array.isArray(requirements) || JSON.stringify(requirements).length > 30000)) return fail('Invalid image requirements');
         const raw = await deepseek(env, [
-          {role:'system', content:'请根据用户的描述和多轮对话生成图像。用 SVG 格式表达画面，返回完整、可解析的 SVG 源码，确保标签闭合、属性使用引号、特殊字符正确转义，并在根元素声明 SVG 命名空间。图像的内容、风格、颜色和构图遵循用户要求；如有基础预设，以用户最新的明确修改为准。'},
+          {role:'system', content:'请根据用户的描述和多轮对话生成图像。用 SVG 格式表达画面，返回完整、可解析的 SVG 源码，确保标签闭合、属性使用引号、特殊字符正确转义，并在根元素声明 SVG 命名空间。图像的内容、风格、颜色和构图遵循用户要求；如有基础预设，以用户最新的明确修改为准。上一版 SVG 只是可编辑的参考，不是必须原样保留的最终结果。对于用户明确撤销的要求，回退该要求对上一版图像造成的修改；对于明确要求去掉的内容，从图中删除。以当前有效需求和最新对话为准，必要时重新绘制。'},
           ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
-          ...(previousSvg ? [{role:'system',content:`上一版图像的 SVG 源码：\n${previousSvg}\n请根据接下来的对话修改或保留画面。`}] : []),
+          ...(previousSvg ? [{role:'system',content:`上一版图像的 SVG 源码：\n${previousSvg}\n请依据最新对话修改或重绘，撤销的要求不应继续影响画面。`}] : []),
+          ...(requirements ? [{role:'system',content:`根据完整对话整理的当前有效生图需求：${JSON.stringify(requirements)}。请按此生成，并处理对话中的撤销或删除操作。`}] : []),
           ...history
         ], false);
         const start = raw.indexOf('<svg'), end = raw.lastIndexOf('</svg>');
