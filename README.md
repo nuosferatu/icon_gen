@@ -12,7 +12,6 @@
 
    ```sh
    npm install
-   test -f wrangler.jsonc || cp wrangler.example.jsonc wrangler.jsonc
    npx wrangler login
    npx wrangler whoami
    ```
@@ -23,7 +22,7 @@
    npx wrangler d1 create image-preset-studio
    ```
 
-   将现有或新建数据库的 `database_id` 填入本地 `wrangler.jsonc`，替换模板中的占位符，并根据需要修改 `database_name` 和 Worker 的 `name`。本地 `wrangler.jsonc` 不会提交到 Git。
+   仓库中的 `wrangler.jsonc` 已配置当前项目使用的 Worker 和 D1 数据库。若要部署到其他 Cloudflare 账户，请在该文件中改为目标账户的数据库 ID，并根据需要调整数据库和 Worker 名称。密钥应通过下方的 Wrangler 命令配置，不要写入配置文件。
 
 3. 首次使用该数据库时，初始化远程数据库：
 
