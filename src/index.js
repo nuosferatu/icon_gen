@@ -99,6 +99,17 @@ export default {
         const latest = [...history].reverse().find(message => message.role === 'user').content;
         return json({reply: '已生成', prompt: latest.slice(0, 2048), svg});
       }
+      if (url.pathname === '/api/summarize' && request.method === 'POST') {
+        const input = await body(request), history = validateHistory(input.history);
+        const preset = input.preset == null ? null : validateSpec(input.preset);
+        const summary = await deepseek(env, [
+          {role:'system', content:'你的任务是压缩关于生图需求的对话上下文，而不是总结普通聊天或评价生成结果。综合基础预设与全部对话，提取当前有效的图像生成要求；用户后续明确修改覆盖旧要求，未被修改的要求保留。输出 JSON 对象，按需包含主体、风格、构图、色彩、背景、细节、约束、排除项和未明确的信息。尽量具体、简洁，不要虚构用户未提出的要求，不要把助手的“已生成”等状态当作画面描述。只输出 JSON。'},
+          ...(preset ? [{role:'system',content:`基础预设：${JSON.stringify(preset)}`}] : []),
+          ...history
+        ]);
+        if (!summary || typeof summary !== 'object' || Array.isArray(summary) || JSON.stringify(summary).length > 30000) throw new Error('DeepSeek 返回的生图需求摘要无效，请重试');
+        return json({summary});
+      }
       if (url.pathname === '/api/presets' && request.method === 'POST') {
         const input = await body(request), history = validateHistory(input.history);
         const name = typeof input.name === 'string' ? input.name.trim().slice(0, 80) : '';

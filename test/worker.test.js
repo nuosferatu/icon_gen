@@ -54,3 +54,23 @@ test('rejects malformed model responses', async () => {
   globalThis.fetch = async () => Response.json({choices:[{message:{content:'not an SVG'}}]});
   try { const response = await worker.fetch(request('/api/generate','POST',{history:[{role:'user',content:'图标'}]},token),env); assert.equal(response.status,400); assert.match((await response.json()).error,/未返回完整的 SVG/); } finally { globalThis.fetch = originalFetch; }
 });
+
+test('summarizes the full image request and loaded preset using structured output', async () => {
+  const env = environment(), token = await login(env), originalFetch = globalThis.fetch;
+  const history = [{role:'user',content:'一只红色小猫'}, {role:'assistant',content:'已生成'}, {role:'user',content:'把颜色改成蓝色'}];
+  const preset = {prompt:'minimal icon',style:'极简'};
+  globalThis.fetch = async (_url, options) => {
+    const payload = JSON.parse(options.body);
+    assert.equal(payload.response_format.type,'json_object');
+    assert.match(payload.messages[0].content,/生图需求/);
+    assert.ok(payload.messages.some(m => m.content.includes('minimal icon')));
+    assert.deepEqual(payload.messages.slice(-history.length), history);
+    return Response.json({choices:[{message:{content:JSON.stringify({主体:'小猫',色彩:'蓝色',风格:'极简'})}}]});
+  };
+  try {
+    const res = await worker.fetch(request('/api/summarize','POST',{history,preset},token),env);
+    assert.equal(res.status,200);
+    assert.deepEqual((await res.json()).summary,{主体:'小猫',色彩:'蓝色',风格:'极简'});
+    assert.equal((await worker.fetch(request('/api/summarize','POST',{history,preset}),env)).status,401);
+  } finally { globalThis.fetch = originalFetch; }
+});
