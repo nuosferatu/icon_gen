@@ -32,7 +32,22 @@ $('#sidebar-toggle').onclick = () => {
 };
 updateSidebarButton();
 
-const toast = (message) => { const el = $('#toast'); el.textContent = message; el.classList.remove('hidden'); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.add('hidden'), 4500); };
+function toast(message, persistent = true) {
+  const notice = document.createElement('div');
+  notice.className = 'toast';
+  notice.setAttribute('role', persistent ? 'alert' : 'status');
+  const text = document.createElement('span');
+  text.textContent = message;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'toast-close';
+  close.setAttribute('aria-label', 'Dismiss notification');
+  close.textContent = '×';
+  close.onclick = () => notice.remove();
+  notice.append(text, close);
+  $('#toast-stack').append(notice);
+  if (!persistent) setTimeout(() => notice.remove(), 4500);
+}
 async function api(path, options = {}) {
   const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers }, ...(options.body ? { body: JSON.stringify(options.body) } : {}) });
   const data = await response.json();
@@ -50,7 +65,7 @@ function renderPresets() {
     const load = document.createElement('button'); load.className = 'preset-load'; load.textContent = preset.name; load.title = preset.name; load.disabled = busy;
     load.onclick = () => { if (history.length && !confirm('Loading a preset will clear the current chat. Continue?')) return; reset(preset); };
     const del = document.createElement('button'); del.className = 'preset-delete'; del.textContent = '×'; del.title = 'Delete Preset'; del.disabled = busy;
-    del.onclick = async () => { if (!confirm(`Delete Preset ${preset.name}?`)) return; try { await api('/api/presets/' + encodeURIComponent(preset.id), {method:'DELETE'}); if (active?.id === preset.id) { active = null; updateActive(); } await refreshPresets(); toast('Preset deleted'); } catch (e) { toast(e.message); } };
+    del.onclick = async () => { if (!confirm(`Delete Preset ${preset.name}?`)) return; try { await api('/api/presets/' + encodeURIComponent(preset.id), {method:'DELETE'}); if (active?.id === preset.id) { active = null; updateActive(); } await refreshPresets(); toast('Preset deleted', false); } catch (e) { toast(e.message); } };
     item.append(load, del); list.append(item);
   }
 }
@@ -120,6 +135,7 @@ $('#chat-form').onsubmit = async e => {
       $('#summary-status').textContent = '';
     } catch (error) {
       $('#summary-status').textContent = 'Summary update failed: ' + error.message;
+      toast('Summary update failed: ' + error.message);
       // A previous summary describes an earlier image, so do not present it as current.
       $('#summary-content').textContent = '';
       $('#summary-content').classList.add('hidden');
@@ -128,5 +144,5 @@ $('#chat-form').onsubmit = async e => {
     pending.remove(); loading.remove(); $('#message').value = content; toast(error.message);
   } finally { setBusy(false); }
 };
-$('#save').onclick = async () => { if (busy || !lastPrompt) return; const name = prompt('Name this preset:'); if (!name?.trim()) return; setBusy(true); try { await api('/api/presets',{method:'POST',body:{name:name.trim(),history,preset:active?.spec || null,lastPrompt}}); await refreshPresets(); toast('Preset saved'); } catch(e) { toast(e.message); } finally { setBusy(false); } };
+$('#save').onclick = async () => { if (busy || !lastPrompt) return; const name = prompt('Name this preset:'); if (!name?.trim()) return; setBusy(true); try { await api('/api/presets',{method:'POST',body:{name:name.trim(),history,preset:active?.spec || null,lastPrompt}}); await refreshPresets(); toast('Preset saved', false); } catch(e) { toast(e.message); } finally { setBusy(false); } };
 (async () => { try { await api('/api/session'); await showStudio(); } catch { showLogin(); } })();

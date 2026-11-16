@@ -93,3 +93,21 @@
 .preset-delete{width:30px;height:30px;padding:0;border-radius:50%}
 .composer .send{top:50%;bottom:auto;transform:translateY(-50%);display:grid;place-items:center;line-height:1}
 @media(min-width:851px){header{padding-left:270px}[data-sidebar="closed"] header{padding-left:4.5%}}
+
+.composer textarea{resize:none}
+.toast-stack{position:fixed;z-index:5;left:50%;bottom:25px;transform:translateX(-50%);width:min(480px,calc(100vw - 32px));max-height:50vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.toast-stack .toast{position:static;transform:none;max-width:none;display:flex;align-items:flex-start;gap:12px;overflow-wrap:anywhere}
+.toast-stack .toast span{flex:1;min-width:0;white-space:pre-wrap}
+.toast-close{flex:none;display:grid;place-items:center;width:24px;height:24px;margin:-3px -5px -3px 0;border:0;border-radius:50%;background:transparent;color:inherit;font-size:20px;line-height:1}
+.toast-close:hover{background:#ffffff30}.toast-close:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+@media(min-width:851px){header,[data-sidebar="closed"] header{padding-left:0}.header-left{width:270px;justify-content:center}}
+.workspace{max-width:none;padding:24px}
+@media(min-width:1001px) and (min-height:650px){
+  .workspace{height:calc(100vh - 72px);height:calc(100dvh - 72px);display:flex;flex-direction:column;min-height:0}
+  .panels{flex:1;min-height:0}
+  .panel{min-height:0}
+  .messages{min-height:0;max-height:none}
+  .summary-content{min-height:0;max-height:none}
+  .image-wrap{min-height:0;grid-template-rows:minmax(0,1fr)}
+  .image-wrap img{min-height:0;max-height:100%}
+}
